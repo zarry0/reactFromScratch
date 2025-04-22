@@ -27,7 +27,7 @@ function createTextElement(text) {
  */
 
 // element, node -> void
-// creates a tree of Nodes based on the input element and appends is to the container
+// creates a tree of Nodes based on the input element and appends it to the container
 function render(element, container) {
     const dom = createDOM(element)
     container.appendChild(dom);
