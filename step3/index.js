@@ -76,12 +76,14 @@ Didact.render(element, container);
  *          type: String,
  *          props,
  *          parent: a Fiber,
+ *          child: a Fiber,
+ *          sibiling: a Fiber,
  *          dom: a Node                         
  *      }
  *   where type is one of
  *              - a String that represents a DOM node (eg. 'div' represents a <div>)
  *              - a TEXT_ELEMENT
- *   Props is { children: [Fiber], ...propKeys }
+ *   Props is { children: [Element], ...propKeys }
  *          where children is an array of Fibers
  *   Node is a DOM node 
  *      eg. a <div>
@@ -94,6 +96,8 @@ Didact.render(element, container);
  *      - sets the element as the root fiber's child
  */
 
+// Element, Node -> void
+// adds the root fiber to nextUnitOfWork
 function render(element, container) {
     nextUnitOfWork = {
         dom: container,
@@ -128,10 +132,37 @@ function performUnitOfWork(fiber) {
     }
 
     if (fiber.parent) {
-        fiber.parent.dom.appendChild(fiber.dom);    // TODO
+        fiber.parent.dom.appendChild(fiber.dom);    
     }
     // create new fibers from the children
+    let lastSibiling = null;
+    fiber.props.children.forEach(element => {
+        const newFiber = {
+            type: element.type,
+            props: element.props,
+            dom: null,
+            parent: fiber
+        };
+        // add sibilings
+        if (!lastSibiling) {
+            fiber.child = newFiber;
+        } else {
+            lastSibiling.sibiling = newFiber;
+        }
+        lastSibiling = newFiber;
+    });
     // return next unit of work
+    if (fiber.child) {
+        return fiber.child;
+    }
+    let curr = fiber;
+    while (curr) {
+        if (curr.sibiling) {
+            return curr.sibiling
+        }
+        curr = curr.parent; 
+    }
+    return null; // return null if there are no nextUnitsOfWork
 }
 
 // type, Props -> Node
